@@ -2,12 +2,22 @@ import { useMemo } from 'react';
 import { useLoader } from '@react-three/fiber';
 import { TextureLoader, CanvasTexture, LinearFilter } from 'three';
 import { PivotControls, useTexture } from '@react-three/drei';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+
 
 // logoScale ab props se aa raha hai
-export default function ShirtModel({ color, text, textColor, textSize, logo, logoScale }) {
+export default function ShirtModel({ color, text, textColor, textSize, logo, logoScale, zoom }) {
     const baseTexture = useLoader(TextureLoader, '/mug.png');
+    // const [zoom, setZoom] = useState(1);
+    const mugRef = useRef();
 
+    useFrame(() => {
+        if (mugRef.current) {
+            mugRef.current.scale.x += (zoom - mugRef.current.scale.x) * 0.1;
+            mugRef.current.scale.y += (zoom - mugRef.current.scale.y) * 0.1;
+        }
+    });
     // Rule fix: Hook hamesha top par
     const uploadedLogo = useTexture(logo || '/mug.png');
 
@@ -39,7 +49,11 @@ export default function ShirtModel({ color, text, textColor, textSize, logo, log
     return (
         <group>
             {/* Shirt Base */}
-            <mesh position={[0, 0, 0]}>
+            <mesh ref={mugRef}
+                onWheel={(e) => {
+                    e.stopPropagation();
+                    setZoom(z => Math.min(Math.max(z - e.deltaY * 0.001, 0.6), 2.5));
+                }}>
                 <planeGeometry args={[planeWidth, planeHeight]} />
                 <meshBasicMaterial map={baseTexture} color={color} transparent />
             </mesh>

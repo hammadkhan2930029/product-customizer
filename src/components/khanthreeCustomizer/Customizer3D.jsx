@@ -13,6 +13,7 @@ export default function Customizer2D() {
     const [logoTexture, setLogoTexture] = useState(null);
     const [logoScale, setLogoScale] = useState(1.5);
     const [finalImage, setFinalImage] = useState(null);
+    const [zoom, setZoom] = useState(1);
 
     // 2. Functions
     const handleImageUpload = (e) => {
@@ -23,6 +24,8 @@ export default function Customizer2D() {
             reader.readAsDataURL(file);
         }
     };
+    //-----------------------------------------------
+
 
     const saveDesign = () => {
         const canvas = document.querySelector('canvas');
@@ -31,6 +34,14 @@ export default function Customizer2D() {
             setFinalImage(dataUrl);
         }
     };
+    //-----------------------------------------------
+    const handleWheelZoom = (e) => {
+        e.preventDefault();
+        setZoom(z =>
+            Math.min(Math.max(z - e.deltaY * 0.001, 0.6), 2.5)
+        );
+    };
+
 
     // 3. CONDITION WALA RETURN HOOKS KE BAAD RAKHEIN
     if (finalImage) {
@@ -52,22 +63,27 @@ export default function Customizer2D() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'Arial' }}>
             <div style={{ flex: 1, backgroundColor: '#f0f0f0', position: 'relative' }}>
-                <Canvas gl={{ preserveDrawingBuffer: true }} camera={{ position: [0, 0, 10], fov: 45 }}>
+                <Canvas gl={{ preserveDrawingBuffer: true }} camera={{ position: [0, 0, 10], fov: 45 }} onWheel={handleWheelZoom}>
                     <ambientLight intensity={1} />
                     <directionalLight position={[2, 2, 5]} intensity={0.5} />
-                    
+
                     <Suspense fallback={null}>
-                        <ShirtModel 
-                            logo={logoTexture} 
+                        <ShirtModel
+                            logo={logoTexture}
                             logoScale={logoScale}
-                            color={shirtColor} 
-                            text={shirtText} 
-                            textColor={shirtTextColor} 
-                            textSize={textSize} 
+                            color={shirtColor}
+                            text={shirtText}
+                            textColor={shirtTextColor}
+                            textSize={textSize}
+                            zoom={zoom}
                         />
                     </Suspense>
 
-                    <OrbitControls makeDefault />
+                    <OrbitControls
+                        makeDefault
+                        enableRotate={false}
+                        enablePan={false}
+                        enableZoom={false} />
                 </Canvas>
             </div>
 
