@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import LogoLibraryModal from './logoLibraryModal';
+
 export default function Controls({
     color,
     setColor,
@@ -9,10 +12,16 @@ export default function Controls({
     setTextSize,
     handleImageUpload,
     logoScale,
-    setLogoScale
+    setLogoScale,
+    // showLogoModal,
+    // setShowLogoModal,
+    setLogoTexture,
+    logoError
 }) {
+    const [showLogoModal, setShowLogoModal] = useState(false);
     return (
         <div style={{
+           
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
             gap: '15px',
@@ -65,6 +74,20 @@ export default function Controls({
                         cursor: 'pointer'
                     }}
                 />
+                <button type="button" onClick={() => setShowLogoModal(true)}>
+                    Select from Library
+                </button>
+                <LogoLibraryModal
+                    show={showLogoModal}
+                    onClose={() => setShowLogoModal(false)}
+                    onSelectLogo={setLogoTexture}
+                />
+                {logoError && (
+                    <span style={{ color: 'red', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                        {logoError}
+                    </span>
+                )}
+
             </div>
 
             {/* Logo Size Slider */}

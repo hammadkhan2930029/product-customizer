@@ -3,6 +3,11 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import ShirtModel from './ShirtModel';
 import Controls from './Controls';
+import logo1 from '../../assets/logo1.png';
+import logo2 from '../../assets/logo2.png';
+import logo3 from '../../assets/logo3.png';
+import logo4 from '../../assets/logo4.png';
+
 
 export default function Customizer2D() {
     // 1. SARE HOOKS TOP PAR RAKHEIN (Koi bhi return inke niche hoga)
@@ -14,25 +19,60 @@ export default function Customizer2D() {
     const [logoScale, setLogoScale] = useState(1.5);
     const [finalImage, setFinalImage] = useState(null);
     const [zoom, setZoom] = useState(1);
-
+    const [isEditing, setIsEditing] = useState(true);
+    const [showLogoModal, setShowLogoModal] = useState(false);
+    const [logoError, setLogoError] = useState('');
     // 2. Functions
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => setLogoTexture(event.target.result);
-            reader.readAsDataURL(file);
-        }
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Minimum pixel requirement for mug (example: 1000x1060)
+                const minWidth = 1000;
+                const minHeight = 1060;
+
+                if (img.width < minWidth || img.height < minHeight) {
+                    setLogoError(`Image too small! Minimum size: ${minWidth}x${minHeight}px`);
+                    alert(`Image too small! Minimum size: ${minWidth}x${minHeight}px`);
+                } else {
+                    setLogoError('');
+                    setLogoTexture(event.target.result);  // Image accepted
+                }
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
     };
+
+
+
+
+    //-----------------------------------------------
+    const preloadedLogos = [
+        logo1,
+        logo2,
+        logo3,
+        logo4,
+
+        // add more
+    ];
     //-----------------------------------------------
 
 
     const saveDesign = () => {
-        const canvas = document.querySelector('canvas');
-        if (canvas) {
-            const dataUrl = canvas.toDataURL('image/png');
-            setFinalImage(dataUrl);
-        }
+        setIsEditing(false); // ⛔ arrows hide
+
+        setTimeout(() => {
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                setFinalImage(dataUrl);
+            }
+        }, 100);
     };
     //-----------------------------------------------
     const handleWheelZoom = (e) => {
@@ -41,6 +81,7 @@ export default function Customizer2D() {
             Math.min(Math.max(z - e.deltaY * 0.001, 0.6), 2.5)
         );
     };
+
 
 
     // 3. CONDITION WALA RETURN HOOKS KE BAAD RAKHEIN
@@ -52,7 +93,10 @@ export default function Customizer2D() {
                     <img src={finalImage} alt="Design Preview" style={{ width: '100%', maxHeight: '70vh', display: 'block' }} />
                 </div>
                 <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                    <button onClick={() => setFinalImage(null)} style={{ padding: '10px 20px', cursor: 'pointer' }}>Back to Edit</button>
+                    <button onClick={() => {
+                        setFinalImage(null)
+                        setIsEditing(true);
+                    }} style={{ padding: '10px 20px', cursor: 'pointer' }}>Back to Edit</button>
                     <a href={finalImage} download="shirt-design.png" style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>Download Image</a>
                 </div>
             </div>
@@ -63,7 +107,10 @@ export default function Customizer2D() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'Arial' }}>
             <div style={{ flex: 1, backgroundColor: '#f0f0f0', position: 'relative' }}>
-                <Canvas gl={{ preserveDrawingBuffer: true }} camera={{ position: [0, 0, 10], fov: 45 }} onWheel={handleWheelZoom}>
+                <Canvas
+                    gl={{ preserveDrawingBuffer: true }}
+                    camera={{ position: [0, 0, 10], fov: 45 }}
+                    onWheel={handleWheelZoom}>
                     <ambientLight intensity={1} />
                     <directionalLight position={[2, 2, 5]} intensity={0.5} />
 
@@ -76,6 +123,7 @@ export default function Customizer2D() {
                             textColor={shirtTextColor}
                             textSize={textSize}
                             zoom={zoom}
+                            isEditing={isEditing}
                         />
                     </Suspense>
 
@@ -89,17 +137,25 @@ export default function Customizer2D() {
 
             <div style={{ padding: '20px', backgroundColor: '#fff', boxShadow: '0 -2px 10px rgba(0,0,0,0.1)' }}>
                 <Controls
+                   
+
                     color={shirtColor} setColor={setShirtColor}
                     text={shirtText} setText={setShirtText}
                     textColor={shirtTextColor} setTextColor={setShirtTextColor}
                     textSize={textSize} setTextSize={setTextSize}
                     logoScale={logoScale} setLogoScale={setLogoScale}
                     handleImageUpload={handleImageUpload}
+                    showLogoModal={showLogoModal}
+                    setShowLogoModal={setShowLogoModal}
+                    setLogoTexture={setLogoTexture}
+                    logoError={logoError}
                 />
                 <button onClick={saveDesign} style={{ width: '100%', marginTop: '15px', padding: '12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
                     Generate Preview
                 </button>
             </div>
+            
+
         </div>
     );
 }
